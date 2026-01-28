@@ -18,7 +18,9 @@
 #define FIRST_NUM_LEFT  ((WIDTH - CELL_WIDTH * NUM_CELLS) / 2)
 
 struct stopwatch {
-    uint64_t last_updated_at;
+    uint64_t start_time;
+    uint64_t offset_cs;
+
     uint8_t is_running;
     uint8_t mins;
     uint8_t secs;
@@ -123,6 +125,8 @@ void main(void) {
     stopwatch.mins = 0;
     stopwatch.secs = 0;
     stopwatch.centisecs = 0;
+    stopwatch.start_time = 0;
+    stopwatch.offset_cs = 0;
     
     bp_init(&stopwatch.bp, 0, 1, WIDTH, HEIGHT, stopwatch.bp_buffer);
     // stopwatch_redraw(&stopwatch);
@@ -137,35 +141,42 @@ void main(void) {
         if (c == 'q') break;
         else if (c == 's') {
             stopwatch.is_running = !stopwatch.is_running;
-            stopwatch.last_updated_at = user_gettime();
+            stopwatch.start_time = user_gettime();
 
-            stopwatch_redraw(&stopwatch);
+            if (!stopwatch.is_running) {
+                stopwatch.offset_cs = stopwatch.mins * 60 * 100 + \
+                    stopwatch.secs * 100 + stopwatch.centisecs;
+            }
+
+            stopwatch.mins = 0;
+            stopwatch.secs = 0;
+            stopwatch.centisecs = 0;
         }
         else if (c == 'r') {
+            stopwatch.offset_cs = 0;
+
             stopwatch.mins = 0;
             stopwatch.secs = 0;
             stopwatch.centisecs = 0;
 
-            stopwatch.last_updated_at = user_gettime();
+            stopwatch.start_time = user_gettime();
 
             stopwatch_redraw(&stopwatch);
         }
 
         if (stopwatch.is_running) {
             uint64_t curr_time = user_gettime();
-            uint64_t elapsed_cs = (curr_time - stopwatch.last_updated_at) / 10000000;
-            
-            int total_cs = stopwatch.centisecs + elapsed_cs;
+            uint64_t elapsed_cs = (curr_time - stopwatch.start_time) / 10000000;
+
+            uint64_t total_cs = stopwatch.offset_cs + elapsed_cs;
             stopwatch.centisecs = total_cs % 100;
 
-            int total_secs = stopwatch.secs + total_cs / 100;
+            uint64_t total_secs = total_cs / 100;
             stopwatch.secs = total_secs % 60;
 
-            int total_mins = stopwatch.mins + total_secs / 60;
+            uint64_t total_mins = total_secs / 60;
             stopwatch.mins = total_mins;
-
-            stopwatch.last_updated_at = curr_time;
-
+            
             stopwatch_redraw(&stopwatch);
         }
     }
