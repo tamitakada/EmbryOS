@@ -15,7 +15,6 @@ void sched_check_sleeping_procs(void) {
         while (sleep_queue[p] && sleep_queue[p] != fst_repeat) {
             struct pcb *pcb = proc_dequeue(&sleep_queue[p]);
             if (curr_ns >= pcb->deadline) {
-                kprintf("Proc %p done sleeping at %u\n", pcb, curr_ns);
                 pcb->status = PROC_WAITING;
                 pcb->deadline = 0;
                 proc_enqueue(&run_queue[p], pcb);
@@ -83,8 +82,6 @@ void sched_sleep(struct pcb *pcb, uint64_t deadline) {
 
     pcb->status = PROC_SLEEPING;
     pcb->deadline = deadline;
-
-    kprintf("Start sleep for proc %p, until ddl %u\n", pcb, deadline);
 
     struct pcb *current = sched_self();
     if (current == pcb) sched_yield();

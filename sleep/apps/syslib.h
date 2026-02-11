@@ -17,7 +17,7 @@ extern uint64_t user_gettime();
 extern void user_sleep(uint64_t deadline);
 
 static inline void user_delay(int ms) {  // pseudo system call
-    user_yield();
-    while (--ms > 0)
-        for (volatile int i = 0; i < DELAY_MS; i++) ;
+    uint64_t ns = ((uint64_t) ms) * 1000000;
+    uint64_t deadline = user_gettime() + ns;
+    user_sleep(deadline);
 }

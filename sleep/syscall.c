@@ -65,7 +65,6 @@ void syscall_handler(struct trap_frame *tf) {
         }
         break;
     case SYS_SLEEP:
-        kprintf("[KERNEL] starting sleep\n");
         sched_sleep(self, tf->a0);
         break;
     case 56: case 63: case 64: case 93: case 214:
